@@ -37,8 +37,16 @@ var Board = function (_React$Component) {
 		_this.state = {
 			width: 50,
 			height: 30,
-			generations: 1
+			generations: 1,
+			fps: 10
 		};
+
+		//animation variables. NOT PART OF THE STATE!
+		_this.fpsInterval = 0;
+		_this.then = 0;
+		_this.startTime = 0;
+		_this.now = 0;
+		_this.elapsed = 0;
 
 		_this.componentWillMount = _this.componentWillMount.bind(_this);
 		_this.componentDidMount = _this.componentDidMount.bind(_this);
@@ -56,95 +64,124 @@ var Board = function (_React$Component) {
 					cells[row][col] = getRandomInt(0, 1);
 				}
 			}
-			//console.log('Last Row:'+cells[29]);
 
 			this.setState({
 				cells: cells
 			});
 		}
+
+		//if we successfully mounted, we need to make sure we update our board using set interval
+
 	}, {
 		key: 'componentDidMount',
 		value: function componentDidMount() {
 
-			setInterval(this.updateBoard.bind(this), 100);
+			//BEGIN ANIMATION!
+			this.fpsInterval = 1000 / this.state.fps;
+			this.then = Date.now();
+			this.startTime = this.then;
+
+			requestAnimationFrame(this.updateBoard.bind(this));
 		}
+
+		//THIS IS THE MAIN BOARD FUNCTION!!
+		//This function calculates the fate of every cell, every frame, and then updates the state
+
 	}, {
 		key: 'updateBoard',
 		value: function updateBoard() {
-			console.log('updating...');
-			var oldCells = this.state.cells.slice(0);
-			var numRows = this.state.height;
-			var numCols = this.state.width;
+			var _this2 = this;
 
-			var neighbours = 0;
-			var newCells = [];
+			// request another frame
+			requestAnimationFrame(this.updateBoard.bind(this));
 
-			oldCells.map(function (row, rindex) {
+			// calc elapsed time since last loop
+			this.now = Date.now();
+			this.elapsed = this.now - this.then;
 
-				newCells[rindex] = [];
-				row.map(function (state, cindex) {
-					neighbours = 0;
+			// if enough time has elapsed, draw the next frame
+			if (this.elapsed > this.fpsInterval) {
+				(function () {
 
-					//Find neighbours
-					if (rindex > 0) {
-						if (cindex > 0 && oldCells[rindex - 1][cindex - 1] > 0) {
-							neighbours++;
-						}
-						if (oldCells[rindex - 1][cindex] > 0) {
-							neighbours++;
-						}
-						if (cindex < numCols - 1 && oldCells[rindex - 1][cindex + 1] > 0) {
-							neighbours++;
-						}
-					}
+					// Get ready for next frame by setting then=now, but also adjust for your
+					// specified fpsInterval not being a multiple of RAF's interval (16.7ms)
+					_this2.then = _this2.now - _this2.elapsed % _this2.fpsInterval;
 
-					if (cindex > 0 && oldCells[rindex][cindex - 1] > 0) {
-						neighbours++;
-					}
+					var oldCells = _this2.state.cells.slice(0);
+					var numRows = _this2.state.height;
+					var numCols = _this2.state.width;
 
-					if (cindex < numCols - 1 && oldCells[rindex][cindex + 1] > 0) {
-						neighbours++;
-					}
+					var neighbours = 0;
+					var newCells = [];
 
-					if (rindex < numRows - 1) {
-						if (cindex > 0 && oldCells[rindex + 1][cindex - 1] > 0) {
-							neighbours++;
-						}
+					oldCells.map(function (row, rindex) {
 
-						if (oldCells[rindex + 1][cindex] > 0) {
-							neighbours++;
-						}
+						newCells[rindex] = [];
+						row.map(function (state, cindex) {
+							neighbours = 0;
 
-						if (cindex < numCols - 1 && oldCells[rindex + 1][cindex + 1] > 0) {
-							neighbours++;
-						}
-					}
+							//Find neighbours
+							if (rindex > 0) {
+								if (cindex > 0 && oldCells[rindex - 1][cindex - 1] > 0) {
+									neighbours++;
+								}
+								if (oldCells[rindex - 1][cindex] > 0) {
+									neighbours++;
+								}
+								if (cindex < numCols - 1 && oldCells[rindex - 1][cindex + 1] > 0) {
+									neighbours++;
+								}
+							}
 
-					//Apply the rules of life!!!
-					if (state === 0 && neighbours === 3) {
-						//Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-						newCells[rindex][cindex] = 1;
-					} else if (state === 1) {
-						if (neighbours < 2) {
-							//	Any live cell with fewer than two live neighbours dies, as if caused by underpopulation.
-							newCells[rindex][cindex] = 0;
-						} else if (neighbours === 2 || neighbours === 3) {
-							//Any live cell with two or three live neighbours lives on to the next generation.
-							newCells[rindex][cindex] = 1;
-						} else if (neighbours > 3) {
-							//Any live cell with more than three live neighbours dies, as if by overpopulation.
-							newCells[rindex][cindex] = 0;
-						}
-					} else {
-						newCells[rindex][cindex] = 0;
-					}
-				});
-			});
+							if (cindex > 0 && oldCells[rindex][cindex - 1] > 0) {
+								neighbours++;
+							}
 
-			this.setState({
-				cells: newCells,
-				generations: this.state.generations + 1
-			});
+							if (cindex < numCols - 1 && oldCells[rindex][cindex + 1] > 0) {
+								neighbours++;
+							}
+
+							if (rindex < numRows - 1) {
+								if (cindex > 0 && oldCells[rindex + 1][cindex - 1] > 0) {
+									neighbours++;
+								}
+
+								if (oldCells[rindex + 1][cindex] > 0) {
+									neighbours++;
+								}
+
+								if (cindex < numCols - 1 && oldCells[rindex + 1][cindex + 1] > 0) {
+									neighbours++;
+								}
+							}
+
+							//Apply the rules of life!!!
+							if (state === 0 && neighbours === 3) {
+								//Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+								newCells[rindex][cindex] = 1;
+							} else if (state === 1) {
+								if (neighbours < 2) {
+									//	Any live cell with fewer than two live neighbours dies, as if caused by underpopulation.
+									newCells[rindex][cindex] = 0;
+								} else if (neighbours === 2 || neighbours === 3) {
+									//Any live cell with two or three live neighbours lives on to the next generation.
+									newCells[rindex][cindex] = 1;
+								} else if (neighbours > 3) {
+									//Any live cell with more than three live neighbours dies, as if by overpopulation.
+									newCells[rindex][cindex] = 0;
+								}
+							} else {
+								newCells[rindex][cindex] = 0;
+							}
+						});
+					});
+
+					_this2.setState({
+						cells: newCells,
+						generations: _this2.state.generations + 1
+					});
+				})();
+			}
 		}
 	}, {
 		key: 'componentWillReceiveProps',
@@ -168,40 +205,10 @@ var Board = function (_React$Component) {
 				React.createElement('div', { className: 'clearfix' })
 			);
 		}
-		/*
-  	render() {
-  		return (
-  			<div id="board">
-  			{this.state.cells.map((cell, index) =>
-  				<Cell key={index}
-  					cellState={cell}
-  					index={index} />
-  
-  			)}
-  			<div className="clearfix"></div>
-  			</div>
-  		)
-  	}
-  */
-
 	}]);
 
 	return Board;
 }(React.Component);
-
-/**
-The universe of the Game of Life is an infinite two-dimensional orthogonal grid of square cells,
-each of which is in one of two possible states, alive or dead, or "populated" or "unpopulated"
-(the difference may seem minor, except when viewing it as an early model of human/urban behaviour
-simulation or how one views a blank space on a grid). Every cell interacts with its eight neighbours,
-which are the cells that are horizontally, vertically, or diagonally adjacent. At each step in time, the following transitions occur:
-
-
-The initial pattern constitutes the seed of the system. The first generation is created by applying the above rules simultaneously to
-every cell in the seed—births and deaths occur simultaneously, and the discrete moment at which this happens is sometimes called a tick
-(in other words, each generation is a pure function of the preceding one). The rules continue to be applied repeatedly to
-create further generations.
-*/
 
 var App = function (_React$Component2) {
 	_inherits(App, _React$Component2);
@@ -316,3 +323,10 @@ function getCookie(cname) {
 function deleteCookie(cname) {
 	setCookie(cname, '', -1);
 }
+
+// shim layer with setTimeout fallback
+window.requestAnimFrame = function () {
+	return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function (callback) {
+		window.setTimeout(callback, 1000 / 60);
+	};
+}();
