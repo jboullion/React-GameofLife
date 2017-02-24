@@ -14,19 +14,21 @@ function Cell(props) {
 			break;
 	}
 
-	return <div className={"cell "+state}></div>;
+	return <div className={"cell "+state}  onClick={() => props.onClick(props.row, props.col)}></div>;
 }
 
 class Board extends React.Component {
 
 	constructor(props) {
 		super(props);
+		/*
 		this.state = {
 			width: 50,
 			height: 30,
 			generations: 1,
-			fps: 10
+			fps: 8
 		};
+		*/
 
 		//animation variables. NOT PART OF THE STATE!
 		this.fpsInterval = 0;
@@ -37,14 +39,15 @@ class Board extends React.Component {
 
 		this.componentWillMount = this.componentWillMount.bind(this);
 		this.componentDidMount = this.componentDidMount.bind(this);
+		this.clickSpawn = this.clickSpawn.bind(this);
 	}
 
 	componentWillMount(){
 		//const pieces = this.props.width * this.props.height;
 		let cells = [];
-		for (var row = 0; row < this.state.height; row++) {
+		for (var row = 0; row < this.props.height; row++) {
 			cells[row] = [];
-			for (var col = 0; col < this.state.width; col++) {
+			for (var col = 0; col < this.props.width; col++) {
 				cells[row][col] = getRandomInt(0, 1);
 			}
 		}
@@ -58,11 +61,20 @@ class Board extends React.Component {
 	componentDidMount() {
 
 		//BEGIN ANIMATION!
-		this.fpsInterval = 1000 / this.state.fps;
+		this.fpsInterval = 1000 / this.props.fps;
 		this.then = Date.now();
 		this.startTime = this.then;
 
 		requestAnimationFrame(this.updateBoard.bind(this));
+	}
+
+	clickSpawn(row,col){
+		const newCells = this.state.cells.slice(0);
+		newCells[row][col] = 2;
+
+		this.setState({
+			cells: newCells
+		})
 	}
 
 	//THIS IS THE MAIN BOARD FUNCTION!!
@@ -83,8 +95,8 @@ class Board extends React.Component {
 			this.then = this.now - (this.elapsed % this.fpsInterval);
 
 			const oldCells = this.state.cells.slice(0);
-			const numRows = this.state.height;
-			const numCols = this.state.width;
+			const numRows = this.props.height;
+			const numCols = this.props.width;
 
 			let neighbours = 0;
 			let newCells = [];
@@ -134,8 +146,8 @@ class Board extends React.Component {
 					//Apply the rules of life!!!
 					if(state === 0 && neighbours === 3){
 						//Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-						newCells[rindex][cindex] = 1;
-					}else if(state === 1){
+						newCells[rindex][cindex] = 2;
+					}else if(state > 0){
 						if(neighbours < 2){
 							//	Any live cell with fewer than two live neighbours dies, as if caused by underpopulation.
 							newCells[rindex][cindex] = 0;
@@ -147,22 +159,39 @@ class Board extends React.Component {
 							newCells[rindex][cindex] = 0;
 						}
 					}else{
+						//set this cell to 0 just to give it a state
 						newCells[rindex][cindex] = 0;
 					}
 
 				})
-			})
+			});
 
 			this.setState({
 				cells: newCells,
 				generations: this.state.generations+1
-			})
+			});
+
+			this.props.update();
 		}
 
 	}
 
-
 	componentWillReceiveProps(nextProps){
+
+		if(nextProps.height != this.props.height){
+			let cells = [];
+			for (var row = 0; row < nextProps.height; row++) {
+				cells[row] = [];
+				for (var col = 0; col < nextProps.width; col++) {
+					cells[row][col] = getRandomInt(0, 1);
+				}
+			}
+
+			this.setState({
+				cells:  cells,
+				generations:  1
+			});
+		}
 
 	}
 
@@ -173,7 +202,7 @@ class Board extends React.Component {
 			cells[rindex] = [];
 			row.map((state, cindex) => {
 				cells[rindex][cindex] = <Cell key={rindex+'-'+cindex}
-					cellState={state} />;
+					cellState={state} row={rindex} col={cindex} onClick={this.clickSpawn} />;
 			})
 		})
 		return (
@@ -186,21 +215,36 @@ class Board extends React.Component {
 
 }
 
+function Generations(props) {
+	return <div id="generations">Generations: {props.generations}</div>;
+}
+
 class App extends React.Component {
 	constructor() {
 		super();
-		/*
 		this.state = {
 			width: 50,
 			height: 30,
-			generations: 1
+			generations: 1,
+			fps: 7
 		};
-		*/
+
+		this.update = this.update.bind(this);
 	}
 
-	//width={this.state.width} height={this.state.height} generations={this.state.generations}
+	update(){
+		this.setState({
+			generations:  this.state.generations + 1
+		});
+	}
+
 	render() {
-		return <Board />
+		return (
+			<div>
+				<Generations generations={this.state.generations} />
+				<Board width={this.state.width} height={this.state.height} fps={this.state.fps} update={this.update} generations={this.state.generations} />
+			</div>
+		)
 	}
 }
 

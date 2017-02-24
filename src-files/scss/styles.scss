@@ -167,10 +167,10 @@ table.table-striped {
 		&.empty {
 			background-color: #FFF;
 		}
-		&.alive {
+		&.dying {
 			background-color: #00EE00;
 		}
-		&.dying {
+		&.alive {
 			background-color: #006600;
 		}
 	}
