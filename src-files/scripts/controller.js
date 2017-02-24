@@ -83,6 +83,8 @@ class Board extends React.Component {
 		// request another frame
 		requestAnimationFrame(this.updateBoard.bind(this));
 
+		if(this.props.running === false) return;
+
 		// calc elapsed time since last loop
 		this.now = Date.now();
 		this.elapsed = this.now - this.then;
@@ -193,6 +195,10 @@ class Board extends React.Component {
 			});
 		}
 
+		if(nextProps.fps !== this.props.fps){
+			this.fpsInterval = 1000 / nextProps.fps;
+		}
+
 	}
 
 	render() {
@@ -215,8 +221,16 @@ class Board extends React.Component {
 
 }
 
-function Generations(props) {
-	return <div id="generations">Generations: {props.generations}</div>;
+function Controls(props) {
+	return (
+		<div id="controls">
+			<div id="generations">Generations: {props.generations}</div>
+			<button id="pause" className="btn btn-primary" onClick={() => props.pause()}>{props.running?'Pause':'Run'}</button>
+			<button className="btn btn-primary" onClick={() => props.speed(0)}>-</button>
+			<div>Speed {props.fps}</div>
+			<button className="btn btn-primary" onClick={() => props.speed(1)}>+</button>
+		</div>
+	);
 }
 
 class App extends React.Component {
@@ -226,10 +240,13 @@ class App extends React.Component {
 			width: 50,
 			height: 30,
 			generations: 1,
-			fps: 7
+			fps: 7,
+			running: true
 		};
 
 		this.update = this.update.bind(this);
+		this.pause = this.pause.bind(this);
+		this.speed = this.speed.bind(this);
 	}
 
 	update(){
@@ -238,11 +255,50 @@ class App extends React.Component {
 		});
 	}
 
+	pause(){
+		if(this.state.running){
+			this.setState({
+				running:  false
+			});
+		}else{
+			this.setState({
+				running:  true
+			});
+		}
+	}
+
+	speed(speed){
+		if(speed === 1){
+			if(this.state.fps < 30){
+				this.setState({
+					fps:  this.state.fps+1
+				});
+			}
+		}else{
+			if(this.state.fps > 1){
+				this.setState({
+					fps:  this.state.fps-1
+				});
+			}
+		}
+	}
+
 	render() {
 		return (
 			<div>
-				<Generations generations={this.state.generations} />
-				<Board width={this.state.width} height={this.state.height} fps={this.state.fps} update={this.update} generations={this.state.generations} />
+				<Controls
+					generations={this.state.generations}
+					pause={this.pause}
+					speed={this.speed}
+					fps={this.state.fps}
+					running={this.state.running} />
+				<Board
+					width={this.state.width}
+					height={this.state.height}
+					fps={this.state.fps}
+					update={this.update}
+					generations={this.state.generations}
+					running={this.state.running} />
 			</div>
 		)
 	}

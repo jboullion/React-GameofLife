@@ -110,6 +110,8 @@ var Board = function (_React$Component) {
 			// request another frame
 			requestAnimationFrame(this.updateBoard.bind(this));
 
+			if (this.props.running === false) return;
+
 			// calc elapsed time since last loop
 			this.now = Date.now();
 			this.elapsed = this.now - this.then;
@@ -219,6 +221,10 @@ var Board = function (_React$Component) {
 					generations: 1
 				});
 			}
+
+			if (nextProps.fps !== this.props.fps) {
+				this.fpsInterval = 1000 / nextProps.fps;
+			}
 		}
 	}, {
 		key: 'render',
@@ -246,12 +252,43 @@ var Board = function (_React$Component) {
 	return Board;
 }(React.Component);
 
-function Generations(props) {
+function Controls(props) {
 	return React.createElement(
 		'div',
-		{ id: 'generations' },
-		'Generations: ',
-		props.generations
+		{ id: 'controls' },
+		React.createElement(
+			'div',
+			{ id: 'generations' },
+			'Generations: ',
+			props.generations
+		),
+		React.createElement(
+			'button',
+			{ id: 'pause', className: 'btn btn-primary', onClick: function onClick() {
+					return props.pause();
+				} },
+			props.running ? 'Pause' : 'Run'
+		),
+		React.createElement(
+			'button',
+			{ className: 'btn btn-primary', onClick: function onClick() {
+					return props.speed(0);
+				} },
+			'-'
+		),
+		React.createElement(
+			'div',
+			null,
+			'Speed ',
+			props.fps
+		),
+		React.createElement(
+			'button',
+			{ className: 'btn btn-primary', onClick: function onClick() {
+					return props.speed(1);
+				} },
+			'+'
+		)
 	);
 }
 
@@ -267,10 +304,13 @@ var App = function (_React$Component2) {
 			width: 50,
 			height: 30,
 			generations: 1,
-			fps: 7
+			fps: 7,
+			running: true
 		};
 
 		_this4.update = _this4.update.bind(_this4);
+		_this4.pause = _this4.pause.bind(_this4);
+		_this4.speed = _this4.speed.bind(_this4);
 		return _this4;
 	}
 
@@ -282,13 +322,54 @@ var App = function (_React$Component2) {
 			});
 		}
 	}, {
+		key: 'pause',
+		value: function pause() {
+			if (this.state.running) {
+				this.setState({
+					running: false
+				});
+			} else {
+				this.setState({
+					running: true
+				});
+			}
+		}
+	}, {
+		key: 'speed',
+		value: function speed(_speed) {
+			if (_speed === 1) {
+				if (this.state.fps < 30) {
+					this.setState({
+						fps: this.state.fps + 1
+					});
+				}
+			} else {
+				if (this.state.fps > 1) {
+					this.setState({
+						fps: this.state.fps - 1
+					});
+				}
+			}
+		}
+	}, {
 		key: 'render',
 		value: function render() {
 			return React.createElement(
 				'div',
 				null,
-				React.createElement(Generations, { generations: this.state.generations }),
-				React.createElement(Board, { width: this.state.width, height: this.state.height, fps: this.state.fps, update: this.update, generations: this.state.generations })
+				React.createElement(Controls, {
+					generations: this.state.generations,
+					pause: this.pause,
+					speed: this.speed,
+					fps: this.state.fps,
+					running: this.state.running }),
+				React.createElement(Board, {
+					width: this.state.width,
+					height: this.state.height,
+					fps: this.state.fps,
+					update: this.update,
+					generations: this.state.generations,
+					running: this.state.running })
 			);
 		}
 	}]);

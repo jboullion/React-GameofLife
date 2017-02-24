@@ -51,6 +51,13 @@ h4 {
 button.btn {
 	padding: 0px 16px;
 	font-size: 16px;
+
+	&:focus,
+	&:active,
+	&:active:focus,
+	&:focus {
+		outline: 0;
+	}
 }
 
 .table {
@@ -149,9 +156,35 @@ table.table-striped {
 }
 
 /**
+ * CONTROLS
+ */
+#controls {
+	> div {
+		display: inline-block;
+		margin-right: 20px;
+	}
+
+	> button {
+		display: inline-block;
+		margin-right: 20px;
+	}
+
+	#generations {
+		width: 150px;
+	}
+
+	#pause {
+		width: 100px;
+	}
+}
+
+/**
  * BOARD
  */
-#board { border: 5px solid #333; width: 510px;
+#board {
+	border: 5px solid #333;
+	width: 510px;
+
 	.cell {
 		float: left;
 		font-size: 6px;
