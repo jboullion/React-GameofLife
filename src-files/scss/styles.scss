@@ -183,7 +183,7 @@ table.table-striped {
  */
 #board {
 	border: 5px solid #333;
-	width: 510px;
+	/* width: 510px; */
 
 	.cell {
 		float: left;
@@ -206,5 +206,26 @@ table.table-striped {
 		&.alive {
 			background-color: #006600;
 		}
+	}
+}
+
+/**
+ * SIZE CONTROLS
+ */
+#size-controls {
+	input {
+		border: 1px solid #ddd;
+		border-radius: 5px;
+		color: #333;
+		text-align: center;
+		width: 60px;
+	}
+
+	span {
+		margin: 0 10px;
+	}
+
+	button {
+		margin: 0 10px;
 	}
 }

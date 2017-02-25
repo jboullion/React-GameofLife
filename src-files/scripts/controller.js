@@ -21,14 +21,6 @@ class Board extends React.Component {
 
 	constructor(props) {
 		super(props);
-		/*
-		this.state = {
-			width: 50,
-			height: 30,
-			generations: 1,
-			fps: 8
-		};
-		*/
 
 		//animation variables. NOT PART OF THE STATE!
 		this.fpsInterval = 0;
@@ -180,7 +172,7 @@ class Board extends React.Component {
 
 	componentWillReceiveProps(nextProps){
 
-		if(nextProps.height != this.props.height){
+		if(nextProps.height != this.props.height || nextProps.width != this.props.width){
 			let cells = [];
 			for (var row = 0; row < nextProps.height; row++) {
 				cells[row] = [];
@@ -212,7 +204,7 @@ class Board extends React.Component {
 			})
 		})
 		return (
-			<div id="board">
+			<div id="board" style={{width: ((this.props.width*10)+10)+"px"}}>
 			{cells}
 			<div className="clearfix"></div>
 			</div>
@@ -233,6 +225,59 @@ function Controls(props) {
 	);
 }
 
+class SizeControls extends React.Component {
+
+	constructor(props) {
+		super(props);
+
+		this.state = {
+			width: props.width,
+			height: props.height,
+		};
+
+		this.updateWidth = this.updateWidth.bind(this);
+		this.updateHeight = this.updateHeight.bind(this);
+		this.componentWillReceiveProps = this.componentWillReceiveProps.bind(this);
+	}
+
+	componentWillReceiveProps(nextProps){
+/*
+		this.setState({
+			width: nextProps.width,
+			height: nextProps.height
+		});
+*/
+	}
+
+	updateWidth(event) {
+		if(event.target.value < 100 ){
+			this.setState({
+				width: event.target.value
+			});
+		}
+	}
+
+	updateHeight(event) {
+		if( event.target.value < 100 ){
+			this.setState({
+				height: event.target.value
+			});
+		}
+	}
+
+	render() {
+		return (
+			<div id="size-controls">
+				<div id="boardsize">Size:</div>
+				<input type="number" value={this.state.width} onChange={this.updateWidth} />
+				<span>x</span>
+				<input type="number" value={this.state.height} onChange={this.updateHeight} />
+				<button className="btn btn-primary" onClick={() => this.props.resize(this.state.width,this.state.height)}>Change</button>
+			</div>
+		);
+	}
+}
+
 class App extends React.Component {
 	constructor() {
 		super();
@@ -240,13 +285,14 @@ class App extends React.Component {
 			width: 50,
 			height: 30,
 			generations: 1,
-			fps: 7,
+			fps: 10,
 			running: true
 		};
 
 		this.update = this.update.bind(this);
 		this.pause = this.pause.bind(this);
 		this.speed = this.speed.bind(this);
+		this.resize = this.resize.bind(this);
 	}
 
 	update(){
@@ -283,6 +329,18 @@ class App extends React.Component {
 		}
 	}
 
+	resize(width, height){
+
+		if(width != this.state.width || height != this.state.height){
+			this.setState({
+				width:  width,
+				height: height,
+				generations:  1
+			});
+		}
+
+	}
+
 	render() {
 		return (
 			<div>
@@ -299,6 +357,10 @@ class App extends React.Component {
 					update={this.update}
 					generations={this.state.generations}
 					running={this.state.running} />
+				<SizeControls
+					width={this.state.width}
+					height={this.state.height}
+					resize={this.resize} />
 			</div>
 		)
 	}
@@ -394,13 +456,3 @@ function getCookie(cname) {
 function deleteCookie(cname) {
 	setCookie(cname, '', -1);
 }
-
-// shim layer with setTimeout fallback
-window.requestAnimFrame = (function(){
-	return  window.requestAnimationFrame       ||
-			window.webkitRequestAnimationFrame ||
-			window.mozRequestAnimationFrame    ||
-			function( callback ){
-				window.setTimeout(callback, 1000 / 60);
-			};
-})();

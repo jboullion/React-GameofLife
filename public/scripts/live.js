@@ -34,15 +34,6 @@ var Board = function (_React$Component) {
 	function Board(props) {
 		_classCallCheck(this, Board);
 
-		/*
-  this.state = {
-  	width: 50,
-  	height: 30,
-  	generations: 1,
-  	fps: 8
-  };
-  */
-
 		//animation variables. NOT PART OF THE STATE!
 		var _this = _possibleConstructorReturn(this, (Board.__proto__ || Object.getPrototypeOf(Board)).call(this, props));
 
@@ -207,7 +198,7 @@ var Board = function (_React$Component) {
 		key: 'componentWillReceiveProps',
 		value: function componentWillReceiveProps(nextProps) {
 
-			if (nextProps.height != this.props.height) {
+			if (nextProps.height != this.props.height || nextProps.width != this.props.width) {
 				var cells = [];
 				for (var row = 0; row < nextProps.height; row++) {
 					cells[row] = [];
@@ -242,7 +233,7 @@ var Board = function (_React$Component) {
 			});
 			return React.createElement(
 				'div',
-				{ id: 'board' },
+				{ id: 'board', style: { width: this.props.width * 10 + 10 + "px" } },
 				cells,
 				React.createElement('div', { className: 'clearfix' })
 			);
@@ -292,26 +283,108 @@ function Controls(props) {
 	);
 }
 
-var App = function (_React$Component2) {
-	_inherits(App, _React$Component2);
+var SizeControls = function (_React$Component2) {
+	_inherits(SizeControls, _React$Component2);
+
+	function SizeControls(props) {
+		_classCallCheck(this, SizeControls);
+
+		var _this4 = _possibleConstructorReturn(this, (SizeControls.__proto__ || Object.getPrototypeOf(SizeControls)).call(this, props));
+
+		_this4.state = {
+			width: props.width,
+			height: props.height
+		};
+
+		_this4.updateWidth = _this4.updateWidth.bind(_this4);
+		_this4.updateHeight = _this4.updateHeight.bind(_this4);
+		_this4.componentWillReceiveProps = _this4.componentWillReceiveProps.bind(_this4);
+		return _this4;
+	}
+
+	_createClass(SizeControls, [{
+		key: 'componentWillReceiveProps',
+		value: function componentWillReceiveProps(nextProps) {
+			/*
+   		this.setState({
+   			width: nextProps.width,
+   			height: nextProps.height
+   		});
+   */
+		}
+	}, {
+		key: 'updateWidth',
+		value: function updateWidth(event) {
+			if (event.target.value < 100) {
+				this.setState({
+					width: event.target.value
+				});
+			}
+		}
+	}, {
+		key: 'updateHeight',
+		value: function updateHeight(event) {
+			if (event.target.value < 100) {
+				this.setState({
+					height: event.target.value
+				});
+			}
+		}
+	}, {
+		key: 'render',
+		value: function render() {
+			var _this5 = this;
+
+			return React.createElement(
+				'div',
+				{ id: 'size-controls' },
+				React.createElement(
+					'div',
+					{ id: 'boardsize' },
+					'Size:'
+				),
+				React.createElement('input', { type: 'number', value: this.state.width, onChange: this.updateWidth }),
+				React.createElement(
+					'span',
+					null,
+					'x'
+				),
+				React.createElement('input', { type: 'number', value: this.state.height, onChange: this.updateHeight }),
+				React.createElement(
+					'button',
+					{ className: 'btn btn-primary', onClick: function onClick() {
+							return _this5.props.resize(_this5.state.width, _this5.state.height);
+						} },
+					'Change'
+				)
+			);
+		}
+	}]);
+
+	return SizeControls;
+}(React.Component);
+
+var App = function (_React$Component3) {
+	_inherits(App, _React$Component3);
 
 	function App() {
 		_classCallCheck(this, App);
 
-		var _this4 = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this));
+		var _this6 = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this));
 
-		_this4.state = {
+		_this6.state = {
 			width: 50,
 			height: 30,
 			generations: 1,
-			fps: 7,
+			fps: 10,
 			running: true
 		};
 
-		_this4.update = _this4.update.bind(_this4);
-		_this4.pause = _this4.pause.bind(_this4);
-		_this4.speed = _this4.speed.bind(_this4);
-		return _this4;
+		_this6.update = _this6.update.bind(_this6);
+		_this6.pause = _this6.pause.bind(_this6);
+		_this6.speed = _this6.speed.bind(_this6);
+		_this6.resize = _this6.resize.bind(_this6);
+		return _this6;
 	}
 
 	_createClass(App, [{
@@ -352,6 +425,18 @@ var App = function (_React$Component2) {
 			}
 		}
 	}, {
+		key: 'resize',
+		value: function resize(width, height) {
+
+			if (width != this.state.width || height != this.state.height) {
+				this.setState({
+					width: width,
+					height: height,
+					generations: 1
+				});
+			}
+		}
+	}, {
 		key: 'render',
 		value: function render() {
 			return React.createElement(
@@ -369,7 +454,11 @@ var App = function (_React$Component2) {
 					fps: this.state.fps,
 					update: this.update,
 					generations: this.state.generations,
-					running: this.state.running })
+					running: this.state.running }),
+				React.createElement(SizeControls, {
+					width: this.state.width,
+					height: this.state.height,
+					resize: this.resize })
 			);
 		}
 	}]);
@@ -461,10 +550,3 @@ function getCookie(cname) {
 function deleteCookie(cname) {
 	setCookie(cname, '', -1);
 }
-
-// shim layer with setTimeout fallback
-window.requestAnimFrame = function () {
-	return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function (callback) {
-		window.setTimeout(callback, 1000 / 60);
-	};
-}();
